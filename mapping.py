@@ -6,9 +6,22 @@ import numpy as np
 from hokuyolx import HokuyoLX
 import matplotlib.pyplot as plt
 from matplotlib.patches import Arrow
+import svgwrite
 
 DMAX = 10000
 STEPS = [100, 500, 1000, 2000, 5000, 10000]
+COLORS = ['#d68080', '#d69580', '#d6ab80', '#d6c080', '#d6d680', '#c0d680', '#abd680', '#95d680', '#80d680', '#80d695', '#80d6ab', '#80d6c0', '#80d6d6', '#80ced6', '#80c0d6', '#80abd6', '#8095d6', '#8080d6', '#9580d6', '#ab80d6', '#c080d6', '#d680d6', '#d680c0', '#d680ab', '#d68095', '#d68080']
+
+def save_svg():
+    dwg = svgwrite.Drawing('plan.svg', size=('1000mm', '1000mm'), viewBox=('0 0 1000 1000'))
+    counter = 0
+    for sample in dataset:
+        group = svgwrite.container.Group(id='Scan%d' % counter)
+        counter = counter + 1
+        for point in sample[1]:
+            group.add(dwg.circle(center=(point[0], -point[1]), r=10, stroke=COLORS[counter % len(COLORS)], fill="none", stroke_width=5))
+        dwg.add(group)
+    dwg.save()
 
 def update_arrow():
     global arrow
@@ -28,6 +41,7 @@ def press(event):
     global pos_y
     global orientation
     global step_index
+    global color_index
     print('press', event.key)
     sys.stdout.flush()
     if event.key == 'up':
@@ -60,16 +74,19 @@ def press(event):
                                distance * math.sin(angle - orientation - 3 * math.pi / 2)]
                                for (angle, distance) in scan])
         cartesian = cartesian + np.array([pos_x, pos_y])
-        plot = ax.plot(*cartesian.T, '.')[0]
+        plot = ax.plot(*cartesian.T, '.', color=COLORS[color_index])[0]
+        color_index = (color_index + 1) % len(COLORS)
         dataset.append([[pos_x, pos_y, orientation], cartesian])
         plt.draw()
         print(dataset)
+        save_svg()
 
 # plt.ion()
 
 pos_x = 0
 pos_y = 0
 step_index = 2
+color_index = 0
 orientation = 0
 
 dataset = []
