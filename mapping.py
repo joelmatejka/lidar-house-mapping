@@ -7,6 +7,7 @@ from hokuyolx import HokuyoLX
 import matplotlib.pyplot as plt
 from matplotlib.patches import Arrow
 import svgwrite
+import csv
 
 DMAX = 10000
 STEPS = [100, 500, 1000, 2000, 5000, 10000]
@@ -22,6 +23,13 @@ def save_svg():
             group.add(dwg.circle(center=(point[0], -point[1]), r=10, stroke=COLORS[counter % len(COLORS)], fill="none", stroke_width=5))
         dwg.add(group)
     dwg.save()
+
+def save_csv():
+    output_file = open("plan.csv", 'w')
+    wr = csv.writer(output_file)
+    for sample in dataset:
+        wr.writerows(sample)
+    output_file.close()
 
 def update_arrow():
     global arrow
@@ -67,6 +75,14 @@ def press(event):
     if event.key == 'j':
         step_index = (step_index + 1) % len(STEPS)
         update_text()
+    if event.key == 'u':
+        if(len(plots) > 0):
+            plots[-1].remove()
+            del plots[-1]
+            del dataset[-1]
+            plt.draw()
+            save_svg()
+            save_csv()
     if event.key == 'x':
         timestamp, scan = laser.get_filtered_dist(dmax=DMAX)
 
@@ -75,11 +91,12 @@ def press(event):
                                for (angle, distance) in scan])
         cartesian = cartesian + np.array([pos_x, pos_y])
         plot = ax.plot(*cartesian.T, '.', color=COLORS[color_index])[0]
+        plots.append(plot)
         color_index = (color_index + 1) % len(COLORS)
         dataset.append([[pos_x, pos_y, orientation], cartesian])
         plt.draw()
-        print(dataset)
         save_svg()
+        save_csv()
 
 # plt.ion()
 
@@ -90,6 +107,7 @@ color_index = 0
 orientation = 0
 
 dataset = []
+plots = []
 
 laser = HokuyoLX()
 fig, ax = plt.subplots()
