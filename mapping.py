@@ -18,10 +18,11 @@ def save_svg():
     counter = 0
     for sample in dataset:
         group = svgwrite.container.Group(id='Scan%d' % counter)
-        counter = counter + 1
+        group.add(dwg.circle(center=(sample[0][0], -sample[0][1]), r=10, stroke='#ff0000', fill="none", stroke_width=5))
         for point in sample[1]:
             group.add(dwg.circle(center=(point[0], -point[1]), r=10, stroke=COLORS[counter % len(COLORS)], fill="none", stroke_width=5))
         dwg.add(group)
+        counter = counter + 1
     dwg.save()
 
 def save_csv():
